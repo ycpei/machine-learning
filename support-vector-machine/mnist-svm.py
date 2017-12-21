@@ -69,4 +69,4 @@ def mnist(ifname):
 
     return accuTrain, accuTest
 
-print(mnist(ifname="train.csv"))
+print(mnist(ifname="train1.csv"))
