@@ -6,7 +6,7 @@ data:
     - simple 2d data
     - ex6data1.mat and ex6data2.mat from Coursera ML course
     - mnist data from kaggle
-Acknowledgements:
+Acknowledgements. Thanks to:
     - Coursera ML course: https://www.coursera.org/learn/machine-learning
     - Platt's paper: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-98-14.pdf
     - Stanford CS229 lecturenotes:

@@ -19,7 +19,7 @@ def pca(x, p):
     print(var1 / var)
     return x1, var1 / var
 
-df = read_csv("../data/kaggle-mnist/train.csv")
+df = read_csv("../data/kaggle-mnist/train1.csv")
 l = df.label.values
 x = df.drop("label", axis=1).values
 print("Finished reading data.")

@@ -19,7 +19,13 @@ class TestSVM(unittest.TestCase):
 
     def test0(self):
         x, y = mnist(ifname="train1.csv")
-        cx, cy = 0.68367346938775508, 0.58730158730158732
+        cx, cy = (1.0, 0.84126984126984128)
+        self.assertTrue(all(isclose((x, y), (cx, cy))))
+
+    def test0(self):
+        print("This may take up to 20 minutes.")
+        x, y = mnist(ifname="train.csv")
+        cx, cy = (0.99959182285111736, 0.97952543448932627)
         self.assertTrue(all(isclose((x, y), (cx, cy))))
 
 def num2IndMat(l):
@@ -67,6 +73,13 @@ def mnist(ifname):
     accuTrain = accuracy(predTrainL, trainL)
     accuTest = accuracy(predTestL, testL)
 
+    # submit:
+    df = read_csv("../data/kaggle-mnist/test.csv")
+    subX = scaleX(df.values)
+    subL = clf.predict(subX)
+    submission = DataFrame({"ImageId": list(range(1, len(subL) + 1)), "Label": subL})
+    submission.to_csv("../data/kaggle-mnist/submit.csv", index=False, header=True)
+
     return accuTrain, accuTest
 
-print(mnist(ifname="train1.csv"))
+print(mnist(ifname="train.csv"))
