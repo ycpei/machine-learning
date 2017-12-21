@@ -4,8 +4,14 @@ blackboxes:
     - none
 data:
     - simple 2d data
-    - ex6data1.mat and ex6data2.mat from coursera machine learning course
+    - ex6data1.mat and ex6data2.mat from Coursera ML course
     - mnist data from kaggle
+Acknowledgements:
+    - Coursera ML course: https://www.coursera.org/learn/machine-learning
+    - Platt's paper: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-98-14.pdf
+    - Stanford CS229 lecturenotes:
+        - http://cs229.stanford.edu/materials/smo.pdf
+        - http://cs229.stanford.edu/notes/cs229-notes3.pdf
 
 note: this file is for pedantic purposes only. training the complete mnist data (with 42000 samples) is very slow. use libsvm instead.
 '''

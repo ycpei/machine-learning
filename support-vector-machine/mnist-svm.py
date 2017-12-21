@@ -2,6 +2,10 @@
 mnist with libsvm (scikit-learn)
 blackboxes:
     - sklearn.svm.SVC
+data: mnist data from kaggle
+
+Acknowledgements. Thanks to:
+    - Mr Mean's kaggle code: https://www.kaggle.com/mrmean/svm-trial
 '''
 
 from numpy import *
@@ -54,7 +58,7 @@ def mnist(ifname):
     trainX = scaleX(trainX)
     testX = scaleX(testX)
 
-    clf = SVC()
+    clf = SVC(gamma=.01, C=10)
     clf.fit(trainX, trainL)
 
     predTrainL = clf.predict(trainX)

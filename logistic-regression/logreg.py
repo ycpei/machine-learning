@@ -10,8 +10,8 @@ note:
     - in gradient descent I optimised all the 10 units at once, without regularisation
     - in conjugate gradient I optimise each unit separately and combine the results for one-vs-all. It is faster this way. I also used regularisation
 
-Acknowledgements. thanks to:
-    - Andrew Ng's ML course: https://www.coursera.org/learn/machine-learning
+Acknowledgements. Thanks to:
+    - Coursera ML course: https://www.coursera.org/learn/machine-learning
     - zgo2016's code on kaggle: https://www.kaggle.com/zgo2016/digit-recognizer-one-vs-all
 '''
 

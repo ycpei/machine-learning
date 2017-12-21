@@ -10,6 +10,7 @@ note: single hidden layer, with 25 units, one-vs-all
 
 Acknowledgements. thanks to:
     - Andrew Ng's ML course: https://www.coursera.org/learn/machine-learning
+    - Hideki Ikeda's code: https://www.kaggle.com/hideki1234/neural-network/code
 '''
 
 import matplotlib.pyplot as plt
