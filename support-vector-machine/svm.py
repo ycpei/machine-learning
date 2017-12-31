@@ -13,7 +13,7 @@ Acknowledgements. Thanks to:
         - http://cs229.stanford.edu/materials/smo.pdf
         - http://cs229.stanford.edu/notes/cs229-notes3.pdf
 
-note: this file is for pedantic purposes only. training the complete mnist data (with 42000 samples) is very slow. use libsvm instead.
+note: this file is for pedagogical purposes only. training the complete mnist data (with 42000 samples) is very slow. use libsvm instead.
 '''
 
 from numpy import *
