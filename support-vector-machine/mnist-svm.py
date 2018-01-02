@@ -58,11 +58,12 @@ def accuracy(x, y):
     t = (x == y)
     return sum(t) / len(t)
 
-def mnist(ifname):
+def mnist(ifname, scale=True):
     trainX, trainL, testX, testL = readData("../data/kaggle-mnist/" + ifname)
 
-    trainX = scaleX(trainX)
-    testX = scaleX(testX)
+    if scale:
+        trainX = scaleX(trainX)
+        testX = scaleX(testX)
 
     clf = SVC(gamma=.01, C=10)
     clf.fit(trainX, trainL)
@@ -82,4 +83,5 @@ def mnist(ifname):
 
     return accuTrain, accuTest
 
-print(mnist(ifname="train.csv"))
+#print(mnist(ifname="train.csv"))
+print(mnist(ifname="train-pca-50-comp.csv"), scale=False)
