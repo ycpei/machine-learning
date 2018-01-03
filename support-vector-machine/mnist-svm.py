@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import unittest
 from pandas import read_csv, DataFrame
 from sklearn.svm import SVC
+import time
 
 class TestSVM(unittest.TestCase):
 
@@ -58,9 +59,11 @@ def accuracy(x, y):
     t = (x == y)
     return sum(t) / len(t)
 
-def mnist(ifname, scale=True):
-    trainX, trainL, testX, testL = readData("../data/kaggle-mnist/" + ifname)
+def mnist(ifname, ifname1, scale=True):
+    workDir = "../data/kaggle-mnist/"
+    trainX, trainL, testX, testL = readData(workDir + ifname)
 
+    startTime = time.time()
     if scale:
         trainX = scaleX(trainX)
         testX = scaleX(testX)
@@ -75,13 +78,20 @@ def mnist(ifname, scale=True):
     accuTest = accuracy(predTestL, testL)
 
     # submit:
-    df = read_csv("../data/kaggle-mnist/test.csv")
-    subX = scaleX(df.values)
+    ofname = workDir + "submit.csv"
+    df = read_csv(workDir + ifname1)
+    if scale:
+        subX = scaleX(df.values)
+    else:
+        subX = df.values
     subL = clf.predict(subX)
     submission = DataFrame({"ImageId": list(range(1, len(subL) + 1)), "Label": subL})
-    submission.to_csv("../data/kaggle-mnist/submit.csv", index=False, header=True)
+    submission.to_csv(ofname, index=False, header=True)
 
-    return accuTrain, accuTest
+    print("Finished training and predicting. Total time: {}. Prediction written to {}."
+          "Training set accuracy: {}. Testing set accuracy: {}".format(time.time() - startTime, 
+              ofname, accuTrain, accuTest))
 
-#print(mnist(ifname="train.csv"))
-print(mnist(ifname="train-pca-50-comp.csv"), scale=False)
+
+#print(mnist(ifname="train.csv", ifname1="test.csv", scale=True))
+mnist(ifname="train-pca-35-comp.csv", ifname1="test-pca-35-comp.csv", scale=False)
