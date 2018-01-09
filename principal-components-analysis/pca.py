@@ -1,4 +1,6 @@
 """
+Author: Yuchen Pei (me@ypei.me)
+Year: 2018
 mnist data with PCA, tested with ../support-vector-machine/mnist-svm.py
 blackbox: scipy.linalg.svds
 acknowledgement:

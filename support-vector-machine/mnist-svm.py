@@ -1,4 +1,6 @@
 '''
+Author: Yuchen Pei (me@ypei.me)
+Year: 2017
 mnist with libsvm (scikit-learn)
 blackboxes:
     - sklearn.svm.SVC

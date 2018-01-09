@@ -1,4 +1,6 @@
 """
+author: Yuchen Pei (me@ypei.me)
+date: 2018-01-09
 k-means example. Using Coursera Machine Learning course's data.
 blackboxes: none
 acknowledgement: Coursera Machine Learning course

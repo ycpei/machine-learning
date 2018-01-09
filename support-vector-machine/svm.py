@@ -1,4 +1,6 @@
 '''
+Author: Yuchen Pei (me@ypei.me)
+Year: 2017
 support vector machine via sequential minimal optimisation (smo)
 blackboxes:
     - none

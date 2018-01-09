@@ -1,4 +1,6 @@
 '''
+Author: Yuchen Pei (me@ypei.me)
+Year: 2017
 neural network
 using conjugate gradient for optimisation
 blackboxes:

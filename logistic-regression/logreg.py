@@ -1,4 +1,6 @@
 '''
+Author: Yuchen Pei (me@ypei.me)
+Year: 2017
 linear logistic regression one-vs-all
 using simple gradient descent or conjugate gradient
 blackboxes:
