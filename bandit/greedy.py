@@ -1,4 +1,6 @@
 #monte carlo k-arm bandit greedy strategy feasibility
+#the probability that greedy strategy after one run of each arm of the k-arm bandit gives the optimal policy.
+#question: is there a closed-form formula?
 import numpy as np
 import numpy.random as random
 
