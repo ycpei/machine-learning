@@ -25,6 +25,7 @@ def plot_probs(ifname):
     df = pd.read_csv(ifname)
     ks, ps = df.k, df.p
     #ys = np.log(ks) / ks + .2
+    #print(ps - 1 / ks)
     zs = 1 / ps ** 4
     #plt.plot(ks, ps)
     #c = (10000 - 256) / 81
