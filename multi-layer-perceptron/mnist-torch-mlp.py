@@ -1,3 +1,9 @@
+#model:
+#one fully connected hidden layer of size 100
+#SGD with batch size 128
+#learning rate .001
+#Peak validation accuracy ~97%
+
 #things to do:
 #regularisation
 #early stopping
@@ -14,7 +20,7 @@ class MLP(nn.Module):
         super(MLP, self).__init__()
         self.network = nn.Sequential(
                     nn.Linear(784, hidden_size),
-                    nn.ReLU(),
+                    nn.ReLU(),  #if sigmoid results not so good
                     nn.Linear(hidden_size, 10))
 
     def forward(self, x):
@@ -45,9 +51,10 @@ def load_data(fname, cut=.8):
 
 if __name__ == '__main__':
     #parameters
-    hidden_size = 40
+    hidden_size = 100
     learning_rate = .001
     batch_size = 128
+    #combination of learning_rate, batch_size = .01 10 does not improve the result
     epochs = 40
     fname = '../data/kaggle-mnist/train.csv'
 
@@ -55,14 +62,14 @@ if __name__ == '__main__':
     model = MLP(hidden_size)
     print("model: {}".format(model))
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
-    #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    #optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, weight_decay=.0001)  #none of the .1, .01, .001, .0001 l2 regularisation helps with the accuracy
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     #prepare data
     print("Loading data...")
     train_dataset, valid_dataset = load_data(fname)
     train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size)
-    valid_loader = DataLoader(dataset=valid_dataset)
+    valid_loader = DataLoader(dataset=valid_dataset, batch_size=len(valid_dataset))
 
     #train
     #for xbatch, ybatch in get_batch(xtrain, ytrain, batch_size):
@@ -78,16 +85,13 @@ if __name__ == '__main__':
             optimizer.step()
             _, pred = torch.max(output, 1)
             correct += (pred == y).sum().item()
-        print('Accuracy: {}'.format(correct / len(train_dataset)))
-
-    #predict
-    print("Predicting...")
-    correct = 0
-    for x, y in valid_loader:
-        output = model(x)
-        _, pred = torch.max(output, 1)
-        correct += (pred == y).sum().item()
-    print('Accuracy: {}'.format(correct / len(valid_dataset)))
+        print('Train accuracy:      {}'.format(correct / len(train_dataset)))
+        correct = 0
+        for x, y in valid_loader:
+            output = model(x)
+            _, pred = torch.max(output, 1)
+            correct += (pred == y).sum().item()
+        print('Validation accuracy: {}'.format(correct / len(valid_dataset)))
 
 ############################### Old code, not in use ###############################
 
