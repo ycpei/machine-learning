@@ -40,7 +40,7 @@ class MNIST(Dataset):
         else:
             return self.x[index], self.y[index]
 
-def load_data(fname, cut=.8):
+def load_data(fname, cut=.8333333):
     df = read_csv(fname)
     x = torch.tensor(df.drop("label", axis=1).values / 255., dtype=torch.float)
     y = torch.tensor(df.label.values, dtype=torch.long)
@@ -54,16 +54,18 @@ if __name__ == '__main__':
     hidden_size = 100
     learning_rate = .001
     batch_size = 128
-    #combination of learning_rate, batch_size = .01 10 does not improve the result
-    epochs = 40
-    fname = '../data/kaggle-mnist/train.csv'
+    #combination of learning_rate, batch_size = .01 10 does not improve the result - 0.1x accuracy for 10 epochs
+    epochs = 80
+    #fname = '../data/kaggle-mnist/train.csv'
+    fname = '../data/mnist/mnist_train.csv'
 
     #prepare model
     model = MLP(hidden_size)
     print("model: {}".format(model))
     criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
     #optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, weight_decay=.0001)  #none of the .1, .01, .001, .0001 l2 regularisation helps with the accuracy
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     #prepare data
     print("Loading data...")
@@ -74,10 +76,12 @@ if __name__ == '__main__':
     #train
     #for xbatch, ybatch in get_batch(xtrain, ytrain, batch_size):
     print("Training...")
+    max_valid_acc = 0.
+    arg_max_valid = 0
     for epoch in range(epochs):
         print("Epoch {}:".format(epoch))
         correct = 0
-        optimizer.zero_grad() #Important - the learning would not converge without this. But why?
+        optimizer.zero_grad() #Important - the learning would not converge without this. But why? Because otherwise the gradient is accumulated (good for RNN), see https://discuss.pytorch.org/t/why-do-we-need-to-set-the-gradients-manually-to-zero-in-pytorch/4903
         for x, y in train_loader:
             output = model(x)
             loss = criterion(output, y)
@@ -91,7 +95,13 @@ if __name__ == '__main__':
             output = model(x)
             _, pred = torch.max(output, 1)
             correct += (pred == y).sum().item()
-        print('Validation accuracy: {}'.format(correct / len(valid_dataset)))
+        valid_acc = correct / len(valid_dataset)
+        if max_valid_acc < valid_acc:
+            arg_max_valid = epoch
+            max_valid_acc = valid_acc
+        print('Validation accuracy: {}'.format(valid_acc))
+
+    print('Best validation accuracy {} achieved at epoch {}'.format(max_valid_acc, arg_max_valid))
 
 ############################### Old code, not in use ###############################
 
