@@ -1,6 +1,6 @@
 #model:
-#one fully connected hidden layer
-#SGD
+#exp10
+#~98.85% valid accuracy
 
 #things to do:
 #regularisation
@@ -13,20 +13,26 @@ import numpy as np
 from pandas import read_csv
 from torch.utils.data import Dataset, DataLoader
 
-class MLP(nn.Module):
+class SomeNet(nn.Module):
     def __init__(self, hidden_size):
-        super(MLP, self).__init__()
-        self.network = nn.Sequential(
-                    nn.Linear(784, hidden_size),
+        super(SomeNet, self).__init__()
+        self.conv_pool = nn.Sequential(
+                    nn.Conv2d(1, 20, 5),
+                    nn.MaxPool2d(2),
+                    nn.ReLU())
+        self.linear = nn.Sequential(
+                    nn.Linear(20 * 12 * 12, hidden_size),
                     nn.ReLU(),  #if sigmoid results not so good
                     nn.Linear(hidden_size, 10))
 
     def forward(self, x):
-        return self.network(x)
+        x1 = self.conv_pool(x)
+        x1 = x1.view(x1.size(0), -1)
+        return self.linear(x1)
 
 class MNIST(Dataset):
     def __init__(self, x, y=None):
-        self.x = x
+        self.x = x.unsqueeze(1)
         self.y = y
 
     def __len__(self):
@@ -40,7 +46,9 @@ class MNIST(Dataset):
 
 def load_data(fname, cut=.8333333):
     df = read_csv(fname)
-    x = torch.tensor(df.drop("label", axis=1).values / 255., dtype=torch.float)
+    xarr = df.drop("label", axis=1).values / 255.
+    xarr.shape = (len(xarr), 28, 28)
+    x = torch.tensor(xarr, dtype=torch.float)
     y = torch.tensor(df.label.values, dtype=torch.long)
     divider = int(len(x) * cut)
     train_dataset = MNIST(x=x[:divider], y=y[:divider])
@@ -58,7 +66,7 @@ if __name__ == '__main__':
     fname = '../data/mnist/mnist_train.csv'
 
     #prepare model
-    model = MLP(hidden_size)
+    model = SomeNet(hidden_size)
     print("model: {}".format(model))
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
