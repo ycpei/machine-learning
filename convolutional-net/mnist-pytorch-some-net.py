@@ -109,11 +109,11 @@ if __name__ == '__main__':
     epochs = 80
     #fname = '../data/kaggle-mnist/train.csv'
     fname = '../data/mnist/mnist_train.csv'
-    gpu = False
+    gpu = True
 
     #prepare model
     #model = SomeNet(hidden_size)
-    model = AnotherNet(hidden_size)
+    model = YetAnotherNet(hidden_size)
     if gpu: model.cuda()
 
     print("model: {}".format(model))
