@@ -108,7 +108,8 @@ if __name__ == '__main__':
     #combination of learning_rate, batch_size = .01 10 does not improve the result - 0.1x accuracy for 10 epochs
     epochs = 80
     #fname = '../data/kaggle-mnist/train.csv'
-    fname = '../data/mnist/mnist_train.csv'
+    #fname = '../data/mnist/mnist_train.csv'
+    fname = '../data/mnist/mnist_train_transformed.csv'
     gpu = True
 
     #prepare model
