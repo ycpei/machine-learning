@@ -50,6 +50,28 @@ class AnotherNet(nn.Module):
         x1 = x1.view(x1.size(0), -1)
         return self.linear(x1)
 
+class YetAnotherNet(nn.Module):
+    def __init__(self, hidden_size):
+        super(AnotherNet, self).__init__()
+        self.conv_pool = nn.Sequential(
+                    nn.Conv2d(1, 20, 5),
+                    nn.MaxPool2d(2),
+                    nn.ReLU(),
+                    nn.Conv2d(20, 40, 5),
+                    nn.MaxPool2d(2),
+                    nn.ReLU())
+        self.linear = nn.Sequential(
+                    nn.Linear(40 * 4 * 4, hidden_size),
+                    nn.ReLU(),  #if sigmoid results not so good
+                    nn.Linear(hidden_size, hidden_size),
+                    nn.ReLU(),
+                    nn.Linear(hidden_size, 10))
+
+    def forward(self, x):
+        x1 = self.conv_pool(x)
+        x1 = x1.view(x1.size(0), -1)
+        return self.linear(x1)
+
 class MNIST(Dataset):
     def __init__(self, x, y=None):
         self.x = x.unsqueeze(1)
@@ -80,7 +102,7 @@ def load_data(fname, cut=.8333334, gpu=False):
 
 if __name__ == '__main__':
     #parameters
-    hidden_size = 100
+    hidden_size = 1000
     learning_rate = .001
     batch_size = 128
     #combination of learning_rate, batch_size = .01 10 does not improve the result - 0.1x accuracy for 10 epochs
