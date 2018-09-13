@@ -32,7 +32,7 @@ class SomeNet(nn.Module):
 
 class AnotherNet(nn.Module):
     def __init__(self, hidden_size):
-        super(YetAnotherNet, self).__init__()
+        super(AnotherNet, self).__init__()
         self.conv_pool = nn.Sequential(
                     nn.Conv2d(1, 20, 5),
                     nn.MaxPool2d(2),
@@ -52,7 +52,7 @@ class AnotherNet(nn.Module):
 
 class YetAnotherNet(nn.Module):
     def __init__(self, hidden_size):
-        super(AnotherNet, self).__init__()
+        super(YetAnotherNet, self).__init__()
         self.conv_pool = nn.Sequential(
                     nn.Conv2d(1, 20, 5),
                     nn.MaxPool2d(2),
