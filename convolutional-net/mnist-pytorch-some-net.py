@@ -30,6 +30,26 @@ class SomeNet(nn.Module):
         x1 = x1.view(x1.size(0), -1)
         return self.linear(x1)
 
+class AnotherNet(nn.Module):
+    def __init__(self, hidden_size):
+        super(AnotherNet, self).__init__()
+        self.conv_pool = nn.Sequential(
+                    nn.Conv2d(1, 20, 5),
+                    nn.MaxPool2d(2),
+                    nn.ReLU(),
+                    nn.Conv2d(20, 40, 5),
+                    nn.MaxPool2d(2),
+                    nn.ReLU())
+        self.linear = nn.Sequential(
+                    nn.Linear(40 * 4 * 4, hidden_size),
+                    nn.ReLU(),  #if sigmoid results not so good
+                    nn.Linear(hidden_size, 10))
+
+    def forward(self, x):
+        x1 = self.conv_pool(x)
+        x1 = x1.view(x1.size(0), -1)
+        return self.linear(x1)
+
 class MNIST(Dataset):
     def __init__(self, x, y=None):
         self.x = x.unsqueeze(1)
@@ -70,7 +90,8 @@ if __name__ == '__main__':
     gpu = False
 
     #prepare model
-    model = SomeNet(hidden_size)
+    #model = SomeNet(hidden_size)
+    model = AnotherNet(hidden_size)
     if gpu: model.cuda()
 
     print("model: {}".format(model))
