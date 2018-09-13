@@ -44,12 +44,15 @@ class MNIST(Dataset):
         else:
             return self.x[index], self.y[index]
 
-def load_data(fname, cut=.8333333):
+def load_data(fname, cut=.8333334, gpu=False):
     df = read_csv(fname)
     xarr = df.drop("label", axis=1).values / 255.
     xarr.shape = (len(xarr), 28, 28)
     x = torch.tensor(xarr, dtype=torch.float)
     y = torch.tensor(df.label.values, dtype=torch.long)
+    if gpu:
+        x = x.cuda()
+        y = y.cuda()
     divider = int(len(x) * cut)
     train_dataset = MNIST(x=x[:divider], y=y[:divider])
     valid_dataset = MNIST(x=x[divider:], y=y[divider:])
@@ -64,9 +67,12 @@ if __name__ == '__main__':
     epochs = 80
     #fname = '../data/kaggle-mnist/train.csv'
     fname = '../data/mnist/mnist_train.csv'
+    gpu = False
 
     #prepare model
     model = SomeNet(hidden_size)
+    if gpu: model.cuda()
+
     print("model: {}".format(model))
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
@@ -75,7 +81,7 @@ if __name__ == '__main__':
 
     #prepare data
     print("Loading data...")
-    train_dataset, valid_dataset = load_data(fname)
+    train_dataset, valid_dataset = load_data(fname, gpu=gpu)
     train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size)
     valid_loader = DataLoader(dataset=valid_dataset, batch_size=len(valid_dataset))
 
@@ -108,27 +114,3 @@ if __name__ == '__main__':
         print('Validation accuracy: {}'.format(valid_acc))
 
     print('Best validation accuracy {} achieved at epoch {}'.format(max_valid_acc, arg_max_valid))
-
-############################### Old code, not in use ###############################
-
-class DataDealer:
-    def __init__(self):
-        pass
-    
-    def load(self, fname, cut=.8):
-        df = read_csv(fname)
-        x = torch.tensor(df.drop("label", axis=1).values / 255., dtype=torch.float)
-        l = torch.tensor(df.label.values, dtype=torch.long)
-        size = len(l)
-        y = torch.tensor(np.zeros((size, 10)), dtype=torch.long) #torch.zeros?
-        y[np.arange(size), l] = 1
-        divider = int(size * cut)
-        return (x[:divider], y[:divider]), (x[divider:], l[divider:])
-
-def get_batch(xs, ys, batch_size):
-    N = len(xs)
-    for i in range(0, N, batch_size):
-        xbatch = xs[i * batch_size : (i + 1) * batch_size]
-        ybatch = ys[i * batch_size : (i + 1) * batch_size]
-        yield (xbatch, ybatch)
-
