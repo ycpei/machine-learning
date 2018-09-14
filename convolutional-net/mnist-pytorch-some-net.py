@@ -102,19 +102,22 @@ def load_data(fname, cut=.8333334, gpu=False):
 
 if __name__ == '__main__':
     #parameters
-    hidden_size = 1000
+    #hidden_size = 1000
+    hidden_size = 100
     learning_rate = .001
     batch_size = 128
     #combination of learning_rate, batch_size = .01 10 does not improve the result - 0.1x accuracy for 10 epochs
     epochs = 80
     #fname = '../data/kaggle-mnist/train.csv'
     #fname = '../data/mnist/mnist_train.csv'
-    fname = '../data/mnist/mnist_train_transformed.csv'
-    gpu = True
+    #fname = '../data/mnist/mnist_train_transformed.csv'
+    fname = '../data/mnist/mnist_train_transformed_left.csv'
+    #gpu = True
+    gpu = False
 
     #prepare model
-    #model = SomeNet(hidden_size)
-    model = YetAnotherNet(hidden_size)
+    model = SomeNet(hidden_size)
+    #model = YetAnotherNet(hidden_size)
     if gpu: model.cuda()
 
     print("model: {}".format(model))

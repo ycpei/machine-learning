@@ -32,7 +32,8 @@ def transform(ifname, ofname, size=28):
     ys = df.label.values
     for i, (x, y) in enumerate(zip(xs, ys)):
         if (i % 1000 == 0): print(i)
-        for f in [idt, shift_left, shift_right, shift_up, shift_down]:
+        #for f in [idt, shift_left, shift_right, shift_up, shift_down]:
+        for f in [idt, shift_left]:
             newimage = np.append([y], f(x, size=size))
             of.write(",".join([str(i) for i in newimage]) + "\n")
 
@@ -42,4 +43,5 @@ def test():
         print(f(x, size=3))
 
 #test()
-transform("mnist_train.csv", "mnist_train_transformed.csv")
+#transform("mnist_train.csv", "mnist_train_transformed.csv")
+transform("mnist_train.csv", "mnist_train_transformed_left.csv")
