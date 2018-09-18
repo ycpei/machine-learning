@@ -10,6 +10,8 @@
 import torch.nn as nn
 import torch
 import numpy as np
+import gzip
+import pickle
 from pandas import read_csv
 from torch.utils.data import Dataset, DataLoader
 
@@ -103,8 +105,11 @@ def load_data(fname, cut=10000, gpu=False):
 def load_data_from_pickle(fname, gpu=False):
     f = gzip.open(fname, 'rb')
     train, valid, _ = pickle.load(f, encoding="bytes")
-    trainx = torch.tensor(train[0]/ 255., dtype=torch.float)
-    validx = torch.tensor(valid[0]/ 255., dtype=torch.float)
+    #print(train[0][0])
+    train[0].shape = (len(train[0]), 28, 28)
+    valid[0].shape = (len(valid[0]), 28, 28)
+    trainx = torch.tensor(train[0], dtype=torch.float)
+    validx = torch.tensor(valid[0], dtype=torch.float)
     trainy = torch.tensor(train[1], dtype=torch.long)
     validy = torch.tensor(valid[1], dtype=torch.long)
     if gpu:
