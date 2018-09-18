@@ -30,12 +30,17 @@ def transform(ifname, ofname, size=28):
     df = read_csv(ifname)
     xs = df.drop("label", axis=1).values
     ys = df.label.values
+    all_images = []
     for i, (x, y) in enumerate(zip(xs, ys)):
         if (i % 1000 == 0): print(i)
         #for f in [idt, shift_left, shift_right, shift_up, shift_down]:
-        for f in [shift_up]:
+        for f in [idt]:
             newimage = np.append([y], f(x, size=size))
-            of.write(",".join([str(i) for i in newimage]) + "\n")
+            all_images = np.append(all_images, [newimage], axis=0)
+
+    np.random.shuffle(all_images)
+    for newimage in all_images
+        of.write(",".join([str(i) for i in newimage]) + "\n")
 
 def test():
     x = np.arange(9)
@@ -45,4 +50,4 @@ def test():
 #test()
 #transform("mnist_train.csv", "mnist_train_transformed.csv")
 #transform("mnist_train.csv", "mnist_train_transformed_left.csv")
-transform("mnist_train.csv", "mnist_train_transformed_up.csv")
+transform("mnist_train.csv", "mnist_train_transformed_shuffled.csv")
