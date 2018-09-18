@@ -106,6 +106,8 @@ def load_data_from_pickle(fname, gpu=False):
     f = gzip.open(fname, 'rb')
     train, valid, _ = pickle.load(f, encoding="bytes")
     #print(train[0][0])
+    train[0] = np.array(train[0])
+    valid[0] = np.array(valid[0])
     train[0].shape = (len(train[0]), 28, 28)
     valid[0].shape = (len(valid[0]), 28, 28)
     trainx = torch.tensor(train[0], dtype=torch.float)
