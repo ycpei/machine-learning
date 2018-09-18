@@ -100,6 +100,23 @@ def load_data(fname, cut=10000, gpu=False):
     valid_dataset = MNIST(x=x[-cut:], y=y[-cut:])
     return train_dataset, valid_dataset
 
+def load_data_from_pickle(fname, gpu=False):
+    f = gzip.open(fname, 'rb')
+    train, valid, _ = pickle.load(f, encoding="bytes")
+    trainx = torch.tensor(train[0]/ 255., dtype=torch.float)
+    validx = torch.tensor(valid[0]/ 255., dtype=torch.float)
+    trainy = torch.tensor(train[1], dtype=torch.long)
+    validy = torch.tensor(valid[1], dtype=torch.long)
+    if gpu:
+        trainx = trainx.cuda()
+        trainy = trainy.cuda()
+        validx = validx.cuda()
+        validy = validy.cuda()
+    f.close()
+    train_dataset = MNIST(x=trainx, y=trainy)
+    valid_dataset = MNIST(x=validx, y=validy)
+    return train_dataset, valid_dataset
+
 if __name__ == '__main__':
     #parameters
     #hidden_size = 1000
@@ -112,8 +129,10 @@ if __name__ == '__main__':
     #fname = '../data/mnist/mnist_train.csv'
     #fname = '../data/mnist/mnist_train_transformed.csv'
     fname = '../data/mnist/mnist_train_transformed_shuffled.csv'
+    pfname = "../data/mnist-nndl/mnist.pkl.gz"
     #gpu = True
     gpu = False
+    load_pickle = True
 
     #prepare model
     model = SomeNet(hidden_size)
@@ -128,7 +147,10 @@ if __name__ == '__main__':
 
     #prepare data
     print("Loading data...")
-    train_dataset, valid_dataset = load_data(fname, gpu=gpu)
+    if load_pickle:
+        train_dataset, valid_dataset = load_data_from_pickle(pfname, gpu=gpu)
+    else:
+        train_dataset, valid_dataset = load_data(fname, gpu=gpu)
     train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size)
     valid_loader = DataLoader(dataset=valid_dataset, batch_size=len(valid_dataset))
 

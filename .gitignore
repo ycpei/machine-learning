@@ -1,2 +1,3 @@
 *.swp
 data/mnist/*.csv
+data/mnist-nndl/*.gz
