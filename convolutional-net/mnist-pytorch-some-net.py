@@ -86,7 +86,7 @@ class MNIST(Dataset):
         else:
             return self.x[index], self.y[index]
 
-def load_data(fname, cut=.8333334, gpu=False):
+def load_data(fname, cut=10000, gpu=False):
     df = read_csv(fname)
     xarr = df.drop("label", axis=1).values / 255.
     xarr.shape = (len(xarr), 28, 28)
@@ -95,9 +95,9 @@ def load_data(fname, cut=.8333334, gpu=False):
     if gpu:
         x = x.cuda()
         y = y.cuda()
-    divider = int(len(x) * cut)
-    train_dataset = MNIST(x=x[:divider], y=y[:divider])
-    valid_dataset = MNIST(x=x[divider:], y=y[divider:])
+    #divider = int(len(x) * cut)
+    train_dataset = MNIST(x=x[:-cut], y=y[:-cut])
+    valid_dataset = MNIST(x=x[-cut:], y=y[-cut:])
     return train_dataset, valid_dataset
 
 if __name__ == '__main__':
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     #fname = '../data/kaggle-mnist/train.csv'
     #fname = '../data/mnist/mnist_train.csv'
     #fname = '../data/mnist/mnist_train_transformed.csv'
-    fname = '../data/mnist/mnist_train_transformed_left.csv'
+    fname = '../data/mnist/mnist_train_transformed_shuffled.csv'
     #gpu = True
     gpu = False
 

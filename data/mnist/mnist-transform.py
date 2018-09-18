@@ -32,14 +32,15 @@ def transform(ifname, ofname, size=28):
     xs = df.drop("label", axis=1).values
     ys = df.label.values
     all_images = []
-    for i, (x, y) in enumerate(zip(xs, ys)):
-        if (i % 1000 == 0): print(i)
+    for x, y in zip(xs[:50000], ys[:50000]):
         #for f in [idt, shift_left, shift_right, shift_up, shift_down]:
-        for f in [idt]:
+        for f in [shift_up]:
             newimage = np.append([y], f(x, size=size))
             all_images.append(newimage)
 
     random.shuffle(all_images)
+    for x, y in zip(xs[50000:], ys[50000:]):
+        all_images.append(np.append([y], x))
     for newimage in all_images:
         of.write(",".join([str(i) for i in newimage]) + "\n")
 
