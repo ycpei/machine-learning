@@ -1,5 +1,6 @@
 from pandas import read_csv
 import numpy as np
+import random
 
 def shift_left(row, size=28):
     row = np.append(row[1:], 0)
@@ -36,10 +37,10 @@ def transform(ifname, ofname, size=28):
         #for f in [idt, shift_left, shift_right, shift_up, shift_down]:
         for f in [idt]:
             newimage = np.append([y], f(x, size=size))
-            all_images = np.append(all_images, [newimage], axis=0)
+            all_images.append(newimage)
 
-    np.random.shuffle(all_images)
-    for newimage in all_images
+    random.shuffle(all_images)
+    for newimage in all_images:
         of.write(",".join([str(i) for i in newimage]) + "\n")
 
 def test():
