@@ -1,5 +1,5 @@
 *.swp
 *.pyc
-__pycache
+__pycache__/
 data/mnist/*.csv
 data/mnist-nndl/*.gz
