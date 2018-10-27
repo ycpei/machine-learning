@@ -1,6 +1,7 @@
 from naive_bayes import *
 import unittest
 import numpy as np
+from sklearn.naive_bayes import MultinomialNB
 
 class TestNBMN(unittest.TestCase):
     def assertTupleAE(self, t1, t2):
@@ -35,6 +36,17 @@ class TestNBMN(unittest.TestCase):
         x_new = [[1, 2], [2, 2], [3]]
         output_expected = [[0.4, 0.1, 1. ], [0.6, 0.9, 0. ]]
         self.assertPredictGeneric(x, y, x_new, output_expected)
+
+    def testAgainstSk(self):
+        np.random.seed(1)
+        x = np.random.randint(5, size=(6, 20))
+        y = np.arange(6)
+        clf_sk = MultinomialNB(alpha=0)
+        clf_sk.fit(x, y)
+        xy_prob_expected = np.exp(clf_sk.feature_log_prob_)
+        clf = NBMultinoulli()
+        xy_prob_actual, _ = clf.train(x, y)
+        np.testing.assert_almost_equal(xy_prob_actual, xy_prob_expected) #TODO: need to transform the output from sklearn otherwise this won't pass
 
 if __name__ == '__main__':
     unittest.main()
