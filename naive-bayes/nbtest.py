@@ -39,14 +39,18 @@ class TestNBMN(unittest.TestCase):
 
     def testAgainstSk(self):
         np.random.seed(1)
+        #the following will break the test because y would be [1 2 2 1 2 1], 
+        #i.e. no 0 but we just want to test the correctness of naive_bayes
+        #np.random.seed(2)  
         x = np.random.randint(5, size=(6, 20))
-        y = np.arange(6)
-        clf_sk = MultinomialNB(alpha=0)
-        clf_sk.fit(x, y)
+        y = np.random.randint(0, 3, size=(6,))
+        print(x, y)
+        clf_sk = MultinomialNB(alpha=1)
+        clf_sk.fit(count_input(x), y)
         xy_prob_expected = np.exp(clf_sk.feature_log_prob_)
-        clf = NBMultinoulli()
+        clf = NBMultinoulli(alpha=1)
         xy_prob_actual, _ = clf.train(x, y)
-        np.testing.assert_almost_equal(xy_prob_actual, xy_prob_expected) #TODO: need to transform the output from sklearn otherwise this won't pass
+        np.testing.assert_almost_equal(xy_prob_actual, xy_prob_expected)
 
 if __name__ == '__main__':
     unittest.main()
