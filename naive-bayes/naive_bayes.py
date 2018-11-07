@@ -1,8 +1,43 @@
 import numpy as np
 
-class NBMultinoulli:
+class NBGaussian:
+    """Gaussian NB
     """
-    plain multinoulli NB
+    def __init__(self):
+        pass
+
+    def train(self, x, y):
+        """train a model
+        inputs:
+            x: array[[float]], m x n
+            y: array[int], m
+        outputs:
+        modifies:
+            self.mu, self.sigma, self.cls, self.icls, self.y_prob
+        """
+        self.cls = list(set(y))
+        self.icls = {c: i for i, c in enumerate(cls)}
+        nc = len(self.cls)
+        m, n = x.shape
+        self.mu = np.zeros((nc, n))
+        self.sigma = np.zeros((nc, n))
+        self.y_prob = np.zeros(nc)
+        for i, c in enumerate(cls):
+            count = np.sum(y == c)
+            self.y_prob[i] = count / m
+            self.mu[i, :] = np.sum(x[y == c], axis=0) / count
+            self.sigma[i, :] = np.sqrt(np.sum((x[y == c] - self.mu[i, :]) ** 2, axis=0) / count)
+
+    def predict(self, x):
+        """predict
+        inputs:
+            x: array[[float]]
+        outputs:
+            y: array[int]
+        """
+
+class NBMultinoulli:
+    """multinoulli NB with Laplace smoothing
     """
     def __init__(self, alpha=0):
         self.alpha = alpha
