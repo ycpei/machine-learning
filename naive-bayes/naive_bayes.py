@@ -6,7 +6,7 @@ class NBGaussian:
     def __init__(self):
         pass
 
-    def train(self, x, y):
+    def train(self, x, y, var_smoothing=1e-9):
         """train a model
         inputs:
             x: array[[float]], m x n
@@ -16,25 +16,36 @@ class NBGaussian:
             self.mu, self.sigma, self.cls, self.icls, self.y_prob
         """
         self.cls = list(set(y))
-        self.icls = {c: i for i, c in enumerate(cls)}
+        #self.icls = {c: i for i, c in enumerate(cls)}
         nc = len(self.cls)
         m, n = x.shape
         self.mu = np.zeros((nc, n))
-        self.sigma = np.zeros((nc, n))
+        self.sigma2 = np.zeros((nc, n))
         self.y_prob = np.zeros(nc)
-        for i, c in enumerate(cls):
+        for i, c in enumerate(self.cls):
             count = np.sum(y == c)
             self.y_prob[i] = count / m
             self.mu[i, :] = np.sum(x[y == c], axis=0) / count
-            self.sigma[i, :] = np.sqrt(np.sum((x[y == c] - self.mu[i, :]) ** 2, axis=0) / count)
+            self.sigma2[i, :] = np.sum((x[y == c] - self.mu[i, :]) ** 2, axis=0) / count
+        epsilon = var_smoothing * np.max(np.var(x, axis=0))
+        self.sigma2 += epsilon
 
     def predict(self, x):
         """predict
         inputs:
-            x: array[[float]]
+            x: array[[float]], m x n
         outputs:
-            y: array[int]
+            y: array[int], m
         """
+        nc = len(y_prob)
+        m, n = x.shape
+        log_probs = np.zeros((m, nc))
+        for i in range(m):
+            sample = x[i, :]
+            log_probs[i, :] = np.sum(- np.log(self.sigma2) / 2 - (sample - self.mu) ** 2 / self.sigma2, axis=1)
+        y = [self.cls[i] for i in np.argmax(log_probs, axis=1)]
+        return y
+
 
 class NBMultinoulli:
     """multinoulli NB with Laplace smoothing
@@ -80,7 +91,7 @@ class NBMultinoulli:
         """
         n = len(self.y_prob)
         probs = np.array([[np.product([row[self.word_map[word]] for word in words]) for words in x] for row in self.xy_prob])
-        probs /= np.sum(probs, axis=0, keepdims=True)
+        #probs /= np.sum(probs, axis=0, keepdims=True)
         return probs
 
 def count_input(x):
