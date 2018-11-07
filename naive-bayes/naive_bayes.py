@@ -37,7 +37,7 @@ class NBGaussian:
         outputs:
             y: array[int], m
         """
-        nc = len(y_prob)
+        nc = len(self.y_prob)
         m, n = x.shape
         log_probs = np.zeros((m, nc))
         for i in range(m):
@@ -91,7 +91,7 @@ class NBMultinoulli:
         """
         n = len(self.y_prob)
         probs = np.array([[np.product([row[self.word_map[word]] for word in words]) for words in x] for row in self.xy_prob])
-        #probs /= np.sum(probs, axis=0, keepdims=True)
+        probs /= np.sum(probs, axis=0, keepdims=True)
         return probs
 
 def count_input(x):
