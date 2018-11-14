@@ -41,3 +41,38 @@ class LDA:
         return np.argmin(dot_prod, axis=0)
 
 class LDA_SVD:
+    def train(x, y):
+        """train a model
+        inputs:
+            x: array[[float]], m x n
+            y: array[Eq a], m x 1
+        outputs:
+        modifies:
+            self.mu_trans: array[[float]], nc x n
+            self.cls: list[Eq a], nc x 1
+            self.log_prob: array[float], nc x 1: log prob of class prior
+            self.trans: array[[float]], n x n, operator that transforms data to standard normal
+        """
+        self.cls = list(set(y))
+        nc = len(self.cls)
+        m, n = x.shape
+        mu = np.zoros((nc, n))
+        for i, c in enumerate(self.cls):
+            mu[i, :] = np.mean(x[y == c], axis=0)
+            self.log_prob[i] = np.log(np.sum(y == c)) - np.log(m)
+        x_centred = x - self.mu[y]
+        _, s, vt = np.linalg.svd(x_centred)
+        self.trans = (1 / s) * vt
+        self.mu_trans = np.dot(self.trans, mu.T).T
+
+    def predict(x):
+        """predict
+        inputs:
+            x: array[[float]], m x n
+        outputs:
+            y: array[Eq a], m x 1
+        """
+        m, n = x.shape
+        nc = len(self.cls)
+        diff = x.reshape((m, 1, n)) - self.mu_trans.reshape((1, nc, n))
+        return np.argmax(np.sum(diff * diff, axis=2) - self.log_prob.reshape((1, nc)), axis=1)
