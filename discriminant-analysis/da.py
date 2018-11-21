@@ -54,10 +54,11 @@ class LDA_SVD:
             y: array[Eq a], m x 1
         outputs:
         modifies:
-            self.mu_trans: array[[float]], nc x n
             self.cls: list[Eq a], nc x 1
+            self.mu: array[[float]], nc x n
             self.log_prob: array[float], nc x 1: log prob of class prior
             self.trans: array[[float]], n x n, operator that transforms data to standard normal
+            self.mu_trans: array[[float]], nc x n
         """
         self.cls = list(set(y))
         nc = len(self.cls)
@@ -91,13 +92,13 @@ class FDA(LDA_SVD):
         inputs:
             x: array[[float]], m x n
             y: array[Eq a], m x 1
-            p: number of components
+            p: int, number of components
         outputs:
         modifies:
-            self.mu_trans: array[[float]], nc x p
-            self.cls: list[Eq a], nc x 1
-            self.log_prob: array[float], nc x 1: log prob of class prior
-            self.trans: array[[float]], p x n, operator that transforms data
+            self.p: int
+            self.trans_proj: array[[float]], p x n, operator that first transforms data to standard normal,
+                then projects them to the principle component space
+            self.mu_trans_proj: array[[float]], p x n, the centroids in the principle component space
         """
         super.train(x, y)
         self.p = p
@@ -107,12 +108,18 @@ class FDA(LDA_SVD):
         S_w_inv = np.dot(self.trans.T, self.trans)
         MS_w_inv = np.dot(M, S_w_inv)
         tosvd = MS_w_inv - np.mean(MS_w_inv, axis=0)
-        _, s, vt = np.linalg.svd(tosvd)
+        _, _, vt = np.linalg.svd(tosvd)
         proj = vt[:p,:]
         self.mu_trans_proj = np.dot(self.mu_trans, proj.T)
         self.trans_proj = np.dot(proj, self.trans)
 
     def predict(self, x):
+        """predict
+        inputs:
+            x: array[[float]], m x n
+        outputs:
+            y: array[Eq a], m x 1
+        """
         m, n = x.shape
         nc = len(self.cls)
         diff = np.dot(x, self.trans_proj.T).reshape((m, 1, p)) - self.mu_trans_proj.reshape((1, nc, p))
