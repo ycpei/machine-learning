@@ -62,14 +62,14 @@ class LDA_SVD:
         self.cls = list(set(y))
         nc = len(self.cls)
         m, n = x.shape
-        mu = np.zoros((nc, n))
+        self.mu = np.zoros((nc, n))
         for i, c in enumerate(self.cls):
-            mu[i, :] = np.mean(x[y == c], axis=0)
-            self.log_prob[i] = np.log(np.sum(y == c)) - np.log(m)
-        x_centred = x - mu[y]
+            self.mu[i, :] = np.mean(x[y == c], axis=0)
+            self.log_prob[i] = np.log(np.sum(y == c) / m)
+        x_centred = x - self.mu[y]
         _, s, vt = np.linalg.svd(x_centred)
         self.trans = (1 / s) * vt
-        self.mu_trans = np.dot(self.trans, mu.T).T
+        self.mu_trans = np.dot(self.mu, self.trans.T)
 
     def predict(self, x):
         """predict
@@ -80,8 +80,8 @@ class LDA_SVD:
         """
         m, n = x.shape
         nc = len(self.cls)
-        diff = x.reshape((m, 1, n)) - self.mu_trans.reshape((1, nc, n))
-        return np.argmax(np.sum(diff * diff, axis=2) - self.log_prob.reshape((1, nc)), axis=1)
+        diff = np.dot(x, self.trans.T).reshape((m, 1, n)) - self.mu_trans.reshape((1, nc, n))
+        return self.cls[np.argmax(- m / 2 * np.sum(diff * diff, axis=2) + self.log_prob.reshape((1, nc)), axis=1)]
 
 class FDA(LDA_SVD):
     """Fisher discriminant analysis
@@ -100,14 +100,20 @@ class FDA(LDA_SVD):
             self.trans: array[[float]], p x n, operator that transforms data
         """
         super.train(x, y)
-        x_trans = np.dot(x, self.trans.T)
+        self.p = p
         nc = len(self.cls)
         m, n = x.shape
-        muy = self.mu_trans[y]
-        muy_centred = muy - np.mean(muy)
-        x_centred = x_trans - muy
-        _, s, vt = np.linalg.svd(x_centred)
-        tosvd = np.dot(muy_centred, np.dot(vt.T, (1 / s) * vt))
+        M = self.mu[y]
+        S_w_inv = np.dot(self.trans.T, self.trans)
+        MS_w_inv = np.dot(M, S_w_inv)
+        tosvd = MS_w_inv - np.mean(MS_w_inv, axis=0)
         _, s, vt = np.linalg.svd(tosvd)
-        self.trans = vt[:p,:]
-        self.mu_trans = np.dot(self.mu_trans, self.trans.T)
+        proj = vt[:p,:]
+        self.mu_trans_proj = np.dot(self.mu_trans, proj.T)
+        self.trans_proj = np.dot(proj, self.trans)
+
+    def predict(self, x):
+        m, n = x.shape
+        nc = len(self.cls)
+        diff = np.dot(x, self.trans_proj.T).reshape((m, 1, p)) - self.mu_trans_proj.reshape((1, nc, p))
+        return self.cls[np.argmax(- m / 2 * np.sum(diff * diff, axis=2) + self.log_prob.reshape((1, nc)), axis=1)]
