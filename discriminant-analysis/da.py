@@ -15,20 +15,30 @@ class LDA:
         outputs:
         modifies:
             self.mu: array[[float]], nc x n
-            self.sigma_inv: array[[float]], n x n: inverse of covariance matrix
-            self.cls: list[Eq a], nc x 1
+            self.S_b_inv: array[[float]], n x n: inverse of covariance matrix
+            self.cls: array[Eq a], nc x 1
             self.log_prob: array[float], nc x 1: log prob of class prior
+            self.x_centred: array[[float]]: m x n
+            self.M: array[[float]]: m x n
         """
-        self.cls = list(set(y))
+        self.cls = np.array(list(set(y)))
         nc = len(self.cls)
+        cls_map = {c: i for i, c in enumerate(self.cls)}
+        y_idx = np.array([cls_map[c] for c in y])
         m, n = x.shape
-        self.mu = np.zoros((nc, n))
+        self.mu = np.zeros((nc, n))
+        self.log_prob = np.zeros(nc)
         for i, c in enumerate(self.cls):
             self.mu[i, :] = np.mean(x[y == c], axis=0)
             self.log_prob[i] = np.log(np.sum(y == c) / m)
-        x_centred = x - self.mu[y]
-        sigma = np.dot(x_centred.T, x_centred) / m
-        self.sigma_inv = np.linalg.inv(sigma)
+        self.M = self.mu[y_idx]
+        self.x_centred = x - self.M
+        S_b = np.dot(self.x_centred.T, self.x_centred)
+        self.S_b_inv = np.linalg.inv(S_b)
+        #print(S_b / m, np.linalg.inv(np.linalg.inv(S_b)) / m)
+        #print(np.linalg.det(S_b))
+        #print(np.linalg.svd(S_b))
+        #print(np.dot(S_b, np.linalg.inv(S_b)))
 
     def predict(self, x):
         """predict
@@ -42,7 +52,8 @@ class LDA:
         p = np.zeros((nc, m))
         for i in range(nc):
             x_shifted = x - self.mu[i]
-            p[i, :] = - .5 * np.sum(np.dot(x_shifted, self.sigma_inv) * x_shifted, axis=1) + log_prob[i]
+            p[i, :] = - m / 2 * np.sum(np.dot(x_shifted, self.S_b_inv) * x_shifted, axis=1) + self.log_prob[i]
+        #print(p)
         return self.cls[np.argmax(p, axis=0)]
 
 class LDA_SVD(LDA):
@@ -64,8 +75,7 @@ class LDA_SVD(LDA):
         super.train(x, y)
         nc = len(self.cls)
         m, n = x.shape
-        x_centred = x - self.mu[y]
-        _, s, vt = np.linalg.svd(x_centred)
+        _, s, vt = np.linalg.svd(self.x_centred)
         self.trans = (1 / s) * vt
         self.mu_trans = np.dot(self.mu, self.trans.T)
 
@@ -102,9 +112,8 @@ class FDA(LDA_SVD):
         self.p = p
         nc = len(self.cls)
         m, n = x.shape
-        M = self.mu[y]
         S_w_inv = np.dot(self.trans.T, self.trans)
-        MS_w_inv = np.dot(M, S_w_inv)
+        MS_w_inv = np.dot(self.M, S_w_inv)
         tosvd = MS_w_inv - np.mean(MS_w_inv, axis=0)
         _, _, vt = np.linalg.svd(tosvd)
         proj = vt[:p,:]
