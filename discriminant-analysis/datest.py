@@ -25,20 +25,21 @@ class TestLDA(unittest.TestCase):
 
     def testAgainstSkRandom(self):
         # mismatch predicitons
-        #np.random.seed(6)
-        #x = np.random.randn(6, 2)
-        #y = np.random.randint(0, 2, size=(6,))
-        #x_new = np.random.randn(5, 2)
+        np.random.seed(6)
+        x = np.random.randn(6, 2)
+        y = np.random.randint(0, 2, size=(6,))
+        print(y)
+        x_new = np.random.randn(5, 2)
         # when m and n are close: mismatch covariances due to low rank
         #np.random.seed(0)
         #x = np.random.randn(6, 4)
         #y = np.random.randint(0, 3, size=(6,))
         #x_new = np.random.randn(5, 4)
-        # covariance will be fine, but 1% mismatch
-        np.random.seed(5)
-        x = np.random.randn(100, 4)
-        y = np.random.randint(0, 3, size=(100,))
-        x_new = np.random.randn(5, 4)
+        # covariance will be fine, but 1% mismatch in predictions
+        #np.random.seed(5)
+        #x = np.random.randn(100, 4)
+        #y = np.random.randint(0, 3, size=(100,))
+        #x_new = np.random.randn(5, 4)
         self.assertAgainstSK(x, y, x_new)
 
 if __name__ == '__main__':
