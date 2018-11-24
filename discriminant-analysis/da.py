@@ -5,7 +5,7 @@ Copyright Yuchen Pei (2018) (hi@ypei.me), licensed under GPLv3+
 import numpy as np
 
 class LDA:
-    """linear discriminant analysis
+    """vanilla linear discriminant analysis
     """
     def train(self, x, y):
         """train a model
@@ -15,7 +15,7 @@ class LDA:
         outputs:
         modifies:
             self.mu: array[[float]], nc x n
-            self.S_b_inv: array[[float]], n x n: inverse of covariance matrix
+            self.S_w_inv: array[[float]], n x n: inverse of covariance matrix
             self.cls: array[Eq a], nc x 1
             self.log_prob: array[float], nc x 1: log prob of class prior
             self.x_centred: array[[float]]: m x n
@@ -33,8 +33,10 @@ class LDA:
             self.log_prob[i] = np.log(np.sum(y == c) / m)
         self.M = self.mu[y_idx]
         self.x_centred = x - self.M
-        S_b = np.dot(self.x_centred.T, self.x_centred)
-        self.S_b_inv = np.linalg.inv(S_b)
+        S_w = np.dot(self.x_centred.T, self.x_centred)
+        if np.isclose(np.linalg.det(S_w), 0) and type(self) == LDA:
+            raise ZeroDivisionError('Low rank covariance matrix, please use LDA_SVD instead.')
+        self.S_w_inv = np.linalg.inv(S_w)
         #print(S_b / m, np.linalg.inv(np.linalg.inv(S_b)) / m)
         #print(np.linalg.det(S_b))
         #print(np.linalg.svd(S_b))
@@ -52,7 +54,7 @@ class LDA:
         p = np.zeros((nc, m))
         for i in range(nc):
             x_shifted = x - self.mu[i]
-            p[i, :] = - m / 2 * np.sum(np.dot(x_shifted, self.S_b_inv) * x_shifted, axis=1) + self.log_prob[i]
+            p[i, :] = - m / 2 * np.sum(np.dot(x_shifted, self.S_w_inv) * x_shifted, axis=1) + self.log_prob[i]
         #print(p)
         return self.cls[np.argmax(p, axis=0)]
 
@@ -72,11 +74,13 @@ class LDA_SVD(LDA):
             self.trans: array[[float]], n x n, operator that transforms data to standard normal
             self.mu_trans: array[[float]], nc x n
         """
-        super.train(x, y)
+        super().train(x, y)
         nc = len(self.cls)
         m, n = x.shape
         _, s, vt = np.linalg.svd(self.x_centred)
-        self.trans = (1 / s) * vt
+        vt = vt[np.logical_not(np.isclose(s, 0))]
+        s = s[np.logical_not(np.isclose(s, 0))]
+        self.trans = (1 / s.reshape(-1, 1)) * vt
         self.mu_trans = np.dot(self.mu, self.trans.T)
 
     def predict(self, x):
@@ -88,7 +92,7 @@ class LDA_SVD(LDA):
         """
         m, n = x.shape
         nc = len(self.cls)
-        diff = np.dot(x, self.trans.T).reshape((m, 1, n)) - self.mu_trans.reshape((1, nc, n))
+        diff = np.dot(x, self.trans.T).reshape((m, 1, -1)) - self.mu_trans.reshape((1, nc, -1))
         return self.cls[np.argmax(- m / 2 * np.sum(diff * diff, axis=2) + self.log_prob.reshape((1, nc)), axis=1)]
 
 class FDA(LDA_SVD):
@@ -108,14 +112,16 @@ class FDA(LDA_SVD):
                 then projects them to the principle component space
             self.mu_trans_proj: array[[float]], p x n, the centroids in the principle component space
         """
-        super.train(x, y)
+        super().train(x, y)
         self.p = p
         nc = len(self.cls)
         m, n = x.shape
-        S_w_inv = np.dot(self.trans.T, self.trans)
-        MS_w_inv = np.dot(self.M, S_w_inv)
-        tosvd = MS_w_inv - np.mean(MS_w_inv, axis=0)
-        _, _, vt = np.linalg.svd(tosvd)
+        M_trans = np.dot(self.M, self.trans.T)
+        tosvd = M_trans - np.mean(M_trans, axis=0)
+        _, s, vt = np.linalg.svd(tosvd)
+        vt = vt[np.logical_not(np.isclose(s, 0))]
+        if p > len(vt):
+            raise IndexError('Rank is lower than the number of components')
         proj = vt[:p,:]
         self.mu_trans_proj = np.dot(self.mu_trans, proj.T)
         self.trans_proj = np.dot(proj, self.trans)
@@ -129,5 +135,5 @@ class FDA(LDA_SVD):
         """
         m, n = x.shape
         nc = len(self.cls)
-        diff = np.dot(x, self.trans_proj.T).reshape((m, 1, p)) - self.mu_trans_proj.reshape((1, nc, p))
+        diff = np.dot(x, self.trans_proj.T).reshape((m, 1, self.p)) - self.mu_trans_proj.reshape((1, nc, self.p))
         return self.cls[np.argmax(- m / 2 * np.sum(diff * diff, axis=2) + self.log_prob.reshape((1, nc)), axis=1)]
