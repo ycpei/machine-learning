@@ -32,7 +32,7 @@ class LDA:
             self.mu[i, :] = np.mean(x[y == c], axis=0)
             self.log_prob[i] = np.log(np.sum(y == c) / m)
         self.M = self.mu[y_idx]
-        self.x_centred = x - self.M
+        self.x_centred = (x - self.M) / np.sqrt(m - nc)
         S_w = np.dot(self.x_centred.T, self.x_centred)
         if np.isclose(np.linalg.det(S_w), 0) and type(self) == LDA:
             raise ZeroDivisionError('Low rank covariance matrix, please use LDA_SVD instead.')
@@ -54,7 +54,7 @@ class LDA:
         p = np.zeros((nc, m))
         for i in range(nc):
             x_shifted = x - self.mu[i]
-            p[i, :] = - m / 2 * np.sum(np.dot(x_shifted, self.S_w_inv) * x_shifted, axis=1) + self.log_prob[i]
+            p[i, :] = - .5 * np.sum(np.dot(x_shifted, self.S_w_inv) * x_shifted, axis=1) + self.log_prob[i]
         #print(p)
         return self.cls[np.argmax(p, axis=0)]
 
@@ -93,7 +93,7 @@ class LDA_SVD(LDA):
         m, n = x.shape
         nc = len(self.cls)
         diff = np.dot(x, self.trans.T).reshape((m, 1, -1)) - self.mu_trans.reshape((1, nc, -1))
-        return self.cls[np.argmax(- m / 2 * np.sum(diff * diff, axis=2) + self.log_prob.reshape((1, nc)), axis=1)]
+        return self.cls[np.argmax(- .5 * np.sum(diff * diff, axis=2) + self.log_prob.reshape((1, nc)), axis=1)]
 
 class FDA(LDA_SVD):
     """Fisher discriminant analysis
@@ -136,4 +136,4 @@ class FDA(LDA_SVD):
         m, n = x.shape
         nc = len(self.cls)
         diff = np.dot(x, self.trans_proj.T).reshape((m, 1, self.p)) - self.mu_trans_proj.reshape((1, nc, self.p))
-        return self.cls[np.argmax(- m / 2 * np.sum(diff * diff, axis=2) + self.log_prob.reshape((1, nc)), axis=1)]
+        return self.cls[np.argmax(- .5 * np.sum(diff * diff, axis=2) + self.log_prob.reshape((1, nc)), axis=1)]
