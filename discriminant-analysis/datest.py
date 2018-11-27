@@ -13,7 +13,7 @@ class TestLDA(unittest.TestCase):
         self.clf.train(x, y)
         self.clf_sk.fit(x, y)
         np.testing.assert_equal(self.clf.cls, self.clf_sk.classes_)
-        # to test covariance: change m - nc to m
+        # to test covariance: change m - nc to m in the code
         #np.testing.assert_almost_equal(np.linalg.inv(self.clf.S_w_inv), self.clf_sk.covariance_)
         np.testing.assert_almost_equal(np.exp(self.clf.log_prob), self.clf_sk.priors_)
         np.testing.assert_almost_equal(self.clf.predict(x), self.clf_sk.predict(x)) #
@@ -33,14 +33,12 @@ class TestLDA(unittest.TestCase):
         self.assertRaises(ZeroDivisionError, self.clf.train, x, y)
 
     def testAgainstSkRandom(self):
-        # mismatch predicitons
-        np.random.seed(6)
+        #np.random.seed(6)
         x = np.random.randn(6, 2)
         y = np.random.randint(0, 2, size=(6,))
         x_new = np.random.randn(5, 2)
         self.assertAgainstSK(x, y, x_new)
-        # covariance will be fine, but 1% mismatch in predictions
-        np.random.seed(5)
+        #np.random.seed(5)
         x = np.random.randn(100, 4)
         y = np.random.randint(0, 3, size=(100,))
         x_new = np.random.randn(5, 4)
@@ -75,18 +73,63 @@ class TestLDA_SVD(unittest.TestCase):
         self.assertAgainstSK(x, y, x_new)
 
     def testAgainstSkRandom(self):
-        # mismatch predicitons, but will work if change m to m - nc in the prediction
-        np.random.seed(6)
+        #np.random.seed(6)
         x = np.random.randn(6, 2)
         y = np.random.randint(0, 2, size=(6,))
         x_new = np.random.randn(5, 2)
         self.assertAgainstSK(x, y, x_new)
-        # covariance will be fine, but 1% mismatch in predictions
-        np.random.seed(5)
+        #np.random.seed(5)
         x = np.random.randn(100, 4)
         y = np.random.randint(0, 3, size=(100,))
         x_new = np.random.randn(5, 4)
         self.assertAgainstSK(x, y, x_new)
+
+class TestFDA(unittest.TestCase):
+    def setUp(self):
+        self.clf = FDA()
+
+    def assertAgainstSK(self, x, y, x_new, p=None):
+        m, n = x.shape
+        self.clf_sk = LinearDiscriminantAnalysis(n_components=p)
+        self.clf.train(x, y, p)
+        self.clf_sk.fit(x, y)
+        np.testing.assert_equal(self.clf.cls, self.clf_sk.classes_)
+        np.testing.assert_almost_equal(np.exp(self.clf.log_prob), self.clf_sk.priors_)
+        np.testing.assert_almost_equal(self.clf.predict(x), self.clf_sk.predict(x)) #
+        np.testing.assert_almost_equal(self.clf.predict(x_new), self.clf_sk.predict(x_new))
+
+    def testAgainstSkDocs(self):
+        x = np.array([[-1, -1], [-2, -1], [-3, -2], [1, 1], [2, 1], [3, 2]])
+        y = np.array([1, 1, 1, 2, 2, 2])
+        x_new = np.array([[-0.8, -1]])
+        self.assertAgainstSK(x, y, x_new)
+
+    def testLowRank(self):
+        # when m and n are close: low rank covariance matrix
+        np.random.seed(0)
+        x = np.random.randn(6, 4)
+        y = np.random.randint(0, 3, size=(6,))
+        x_new = np.random.randn(5, 4)
+        self.assertAgainstSK(x, y, x_new)
+
+    def testAgainstSkRandom(self):
+        #np.random.seed(6)
+        x = np.random.randn(6, 2)
+        y = np.random.randint(0, 2, size=(6,))
+        x_new = np.random.randn(5, 2)
+        self.assertAgainstSK(x, y, x_new)
+        #np.random.seed(5)
+        x = np.random.randn(100, 4)
+        y = np.random.randint(0, 3, size=(100,))
+        x_new = np.random.randn(5, 4)
+        self.assertAgainstSK(x, y, x_new)
+
+    def testAgainstSkRandomDimRed(self):
+        #np.random.seed(6)
+        x = np.random.randn(100, 8)
+        y = np.random.randint(0, 6, size=(100,))
+        x_new = np.random.randn(50, 8)
+        self.assertAgainstSK(x, y, x_new, p=4)
 
 if __name__ == '__main__':
     unittest.main()

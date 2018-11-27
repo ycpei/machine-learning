@@ -3,6 +3,7 @@ Copyright Yuchen Pei (2018) (hi@ypei.me), licensed under GPLv3+
 """
 
 import numpy as np
+import warnings
 
 class LDA:
     """vanilla linear discriminant analysis
@@ -98,7 +99,7 @@ class LDA_SVD(LDA):
 class FDA(LDA_SVD):
     """Fisher discriminant analysis
     """
-    def train(self, x, y, p):
+    def train(self, x, y, p=None):
         """train a model
         inputs:
             x: array[[float]], m x n
@@ -113,16 +114,19 @@ class FDA(LDA_SVD):
             self.mu_trans_proj: array[[float]], p x n, the centroids in the principle component space
         """
         super().train(x, y)
-        self.p = p
         nc = len(self.cls)
+        if p is None:
+            p = nc
         m, n = x.shape
         M_trans = np.dot(self.M, self.trans.T)
         tosvd = M_trans - np.mean(M_trans, axis=0)
         _, s, vt = np.linalg.svd(tosvd)
         vt = vt[np.logical_not(np.isclose(s, 0))]
         if p > len(vt):
-            raise IndexError('Rank is lower than the number of components')
+            warnings.warn('Rank is lower than the number of components, use rank as number of components')
+            p = len(vt)
         proj = vt[:p,:]
+        self.p = p
         self.mu_trans_proj = np.dot(self.mu_trans, proj.T)
         self.trans_proj = np.dot(proj, self.trans)
 
