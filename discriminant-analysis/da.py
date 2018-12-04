@@ -84,7 +84,7 @@ class LDA_SVD(LDA):
         vt = vt[np.logical_not(np.isclose(s, 0))]
         s = s[np.logical_not(np.isclose(s, 0))]
         self.trans = (1 / s.reshape(-1, 1)) * vt
-        print("da:", self.trans)
+        #print("da:", self.trans)
         self.mu_trans = np.dot(self.mu, self.trans.T)
 
     def predict(self, x):
@@ -135,6 +135,9 @@ class FDA(LDA_SVD):
         self.p = p
         self.mu_trans_proj = np.dot(self.mu_trans, proj.T)
         self.trans_proj = np.dot(proj, self.trans)
+        #print("da", self.trans)
+        #print("da", proj)
+        #print("da", self.trans_proj)
 
     def predict(self, x):
         """predict
@@ -148,7 +151,7 @@ class FDA(LDA_SVD):
         diff = np.dot(x, self.trans_proj.T).reshape((m, 1, self.p)) - self.mu_trans_proj.reshape((1, nc, self.p))
         return self.cls[np.argmax(- .5 * np.sum(diff * diff, axis=2) + self.log_prob.reshape((1, nc)), axis=1)]
 
-    def transform(self, x):
-        """transform
+    def transform_to_match_sk(self, x):
+        """transformation of x, to match the output of sklearn. currently not matching except when doing dimensionality reduction (p < nc - 1).
         """
         return np.dot(x - self.xbar, self.trans_proj.T)

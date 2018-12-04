@@ -96,7 +96,7 @@ class TestFDA(unittest.TestCase):
         self.clf_sk.fit(x, y)
         np.testing.assert_equal(self.clf.cls, self.clf_sk.classes_)
         np.testing.assert_almost_equal(np.exp(self.clf.log_prob), self.clf_sk.priors_)
-        #np.testing.assert_almost_equal(self.clf.transform(x), self.clf_sk.transform(x))
+        #np.testing.assert_almost_equal(self.clf.transform_to_match_sk(x), self.clf_sk.transform(x))
         np.testing.assert_almost_equal(self.clf.predict(x), self.clf_sk.predict(x)) #
         np.testing.assert_almost_equal(self.clf.predict(x_new), self.clf_sk.predict(x_new))
 
@@ -131,7 +131,22 @@ class TestFDA(unittest.TestCase):
         x = np.random.randn(100, 8)
         y = np.random.randint(0, 6, size=(100,))
         x_new = np.random.randn(50, 8)
-        self.assertAgainstSK(x, y, x_new, p=4)
+        m, n = x.shape
+        p = 4
+        self.clf_sk = LinearDiscriminantAnalysis(n_components=p)
+        self.clf.train(x, y, p)
+        self.clf_sk.fit(x, y)
+        #np.testing(self.clf.predict(x), self.clf_sk.predict(x)) # Will not pass because sklearn lda does not predict on reduced dimension
+
+    def testAgainstSkRandomDimRedTrans(self):
+        x = np.random.randn(100, 8)
+        y = np.concatenate([np.repeat(i, 20) for i in range(5)]) #important for y to be in order
+        clf_sk = LinearDiscriminantAnalysis(n_components=4)
+        clf_sk.fit(x, y)
+        clf = FDA()
+        clf.train(x, y, p=4)
+        np.testing.assert_almost_equal(clf.transform_to_match_sk(x[:10,:]), clf_sk.transform(x[:10,:]))
+
 
 if __name__ == '__main__':
     unittest.main()
