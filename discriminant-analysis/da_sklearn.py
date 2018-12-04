@@ -328,9 +328,9 @@ class LinearDiscriminantAnalysis(BaseEstimator, LinearClassifierMixin,
         fac = 1. / (n_samples - n_classes)
 
         # 2) Within variance scaling
-        #X = np.sqrt(fac) * (Xc / std)
+        #X = np.sqrt(fac) * (Xc / std) #ORIGINAL
         #print(X - Xc)
-        X = np.sqrt(fac) * Xc
+        X = np.sqrt(fac) * Xc #MY MODIFICATION
         #print("X:", X[:10,:])
         # SVD of centered (within)scaled data
         U, S, V = linalg.svd(X, full_matrices=False)
@@ -339,9 +339,9 @@ class LinearDiscriminantAnalysis(BaseEstimator, LinearClassifierMixin,
         if rank < n_features:
             warnings.warn("Variables are collinear.")
         # Scaling of within covariance is: V' 1/S
-        #scalings = (V[:rank] / std).T / S[:rank]
+        #scalings = (V[:rank] / std).T / S[:rank] #ORIGINAL
         #scalings = (V[:rank] ).T / ((S / std)[:rank])
-        scalings = (V[:rank] ).T / S[:rank]
+        scalings = (V[:rank] ).T / S[:rank] #MY MODIFICATION
         #print("da_sklearn", scalings.T)
         #self.scalings = scalings
 
