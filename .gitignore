@@ -3,4 +3,3 @@
 __pycache__/
 data/mnist/*.csv
 data/mnist-nndl/*.gz
-da_sklearn.py
