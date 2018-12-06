@@ -81,6 +81,7 @@ class LDA_SVD(LDA):
         #print("x_centred:", self.x_centred[:10,:])
         m, n = x.shape
         _, s, vt = np.linalg.svd(self.x_centred)
+        #print(s)
         vt = vt[np.logical_not(np.isclose(s, 0))]
         s = s[np.logical_not(np.isclose(s, 0))]
         self.trans = (1 / s.reshape(-1, 1)) * vt

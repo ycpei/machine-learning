@@ -334,6 +334,9 @@ class LinearDiscriminantAnalysis(BaseEstimator, LinearClassifierMixin,
         #print("X:", X[:10,:])
         # SVD of centered (within)scaled data
         U, S, V = linalg.svd(X, full_matrices=False)
+        #print("sum(X, axis=0):", np.sum(X, axis=0))
+        #print("det(X.T X):", np.linalg.det(np.dot(X.T, X)))
+        #print("S:", S)
 
         rank = np.sum(S > self.tol)
         if rank < n_features:
