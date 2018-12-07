@@ -1,8 +1,8 @@
 from da import *
 import unittest
 import numpy as np
-from da_sklearn import LinearDiscriminantAnalysis
-#from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+#from da_sklearn import LinearDiscriminantAnalysis
 
 class TestLDA(unittest.TestCase):
     def setUp(self):
@@ -145,7 +145,9 @@ class TestFDA(unittest.TestCase):
         clf_sk.fit(x, y)
         clf = FDA()
         clf.train(x, y, p=4)
-        np.testing.assert_almost_equal(clf.transform_to_match_sk(x[:10,:]), clf_sk.transform(x[:10,:]))
+        x_trans = clf.transform_to_match_sk(x)
+        x_trans_sk = clf_sk.transform(x)
+        np.testing.assert_almost_equal(np.dot(x_trans.T, x_trans), np.dot(x_trans_sk.T, x_trans_sk))
 
 
 if __name__ == '__main__':

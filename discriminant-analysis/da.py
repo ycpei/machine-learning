@@ -80,11 +80,15 @@ class LDA_SVD(LDA):
         #print("x", x[:10, :])
         #print("x_centred:", self.x_centred[:10,:])
         m, n = x.shape
+        #std = np.std(self.x_centred, axis=0) #
+        #self.x_centred = self.x_centred / std #
         _, s, vt = np.linalg.svd(self.x_centred)
         #print(s)
         vt = vt[np.logical_not(np.isclose(s, 0))]
         s = s[np.logical_not(np.isclose(s, 0))]
-        self.trans = (1 / s.reshape(-1, 1)) * vt
+        self.trans = (vt.T / s).T
+        #self.trans = (vt.T / s).T / std #
+        #self.trans = 1 / s.reshape(-1, 1) * vt
         #print("da:", self.trans)
         self.mu_trans = np.dot(self.mu, self.trans.T)
 
@@ -125,9 +129,11 @@ class FDA(LDA_SVD):
         mu_trans = np.dot(self.mu, self.trans.T)
         self.xbar = np.mean(x, axis=0)
         xbar_trans = np.sum(mu_trans * np.exp(self.log_prob).reshape(-1, 1), axis=0)
-        tosvd = mu_trans - xbar_trans
+        M_trans = np.dot(self.mu[y], self.trans.T) #
+        tosvd = M_trans - xbar_trans #
+        #tosvd = mu_trans - xbar_trans
         _, s, vt = np.linalg.svd(tosvd)
-        vt = vt[:nc, :]
+        #vt = vt[:nc, :]
         vt = vt[np.logical_not(np.isclose(s, 0))]
         if p > len(vt):
             warnings.warn('Rank is lower than the number of components, use rank as number of components')
