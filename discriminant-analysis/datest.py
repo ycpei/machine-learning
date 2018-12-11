@@ -126,28 +126,22 @@ class TestFDA(unittest.TestCase):
         x_new = np.random.randn(5, 4)
         self.assertAgainstSK(x, y, x_new)
 
-    def testAgainstSkRandomDimRed(self):
-        #np.random.seed(6)
+    def testAgainstSkRandomDimRedTrans(self):
         x = np.random.randn(100, 8)
         y = np.random.randint(0, 6, size=(100,))
         x_new = np.random.randn(50, 8)
-        m, n = x.shape
-        p = 4
-        self.clf_sk = LinearDiscriminantAnalysis(n_components=p)
-        self.clf.train(x, y, p)
-        self.clf_sk.fit(x, y)
-        #np.testing(self.clf.predict(x), self.clf_sk.predict(x)) # Will not pass because sklearn lda does not predict on reduced dimension
-
-    def testAgainstSkRandomDimRedTrans(self):
-        x = np.random.randn(100, 8)
-        y = np.concatenate([np.repeat(i, 20) for i in range(5)]) #important for y to be in order
         clf_sk = LinearDiscriminantAnalysis(n_components=4)
         clf_sk.fit(x, y)
         clf = FDA()
         clf.train(x, y, p=4)
         x_trans = clf.transform_to_match_sk(x)
+        cov = np.dot(x_trans.T, x_trans)
         x_trans_sk = clf_sk.transform(x)
-        np.testing.assert_almost_equal(np.dot(x_trans.T, x_trans), np.dot(x_trans_sk.T, x_trans_sk))
+        np.testing.assert_almost_equal(cov, np.dot(x_trans_sk.T, x_trans_sk))
+        cov_diag = (1 - np.isclose(cov, 0))
+        #testing that the cov matrix is diagonal
+        np.testing.assert_almost_equal(cov_diag, np.identity(4))
+        #np.testing(self.clf.predict(x), self.clf_sk.predict(x)) # Will not pass because sklearn lda does not predict on reduced dimension
 
 
 if __name__ == '__main__':

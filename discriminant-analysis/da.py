@@ -1,5 +1,5 @@
 """
-Copyright Yuchen Pei (2018) (hi@ypei.me), licensed under GPLv3+
+Copyright Yuchen Pei (2018) (hi@ypei.me), licensed under GNU GPLv3+
 """
 
 import numpy as np
@@ -15,10 +15,11 @@ class LDA:
             y: array[Eq a], m x 1
         outputs:
         modifies:
-            self.mu: array[[float]], nc x n
+            self.mu: array[[float]], nc x n, per class mean
+            self.M: array[[float]], m x n, per sample mean
             self.S_w_inv: array[[float]], n x n: inverse of covariance matrix
-            self.cls: array[Eq a], nc x 1
-            self.log_prob: array[float], nc x 1: log prob of class prior
+            self.cls: array[Eq a], nc: classes
+            self.log_prob: array[float], nc: log prob of class prior
             self.x_centred: array[[float]]: m x n
         """
         self.cls = np.array(list(set(y)))
@@ -31,16 +32,12 @@ class LDA:
         for i, c in enumerate(self.cls):
             self.mu[i, :] = np.mean(x[y == c], axis=0)
             self.log_prob[i] = np.log(np.sum(y == c) / m)
-        M = self.mu[y_idx]
-        self.x_centred = (x - M) / np.sqrt(m - nc)
+        self.M = self.mu[y_idx]
+        self.x_centred = (x - self.M) / np.sqrt(m - nc)
         S_w = np.dot(self.x_centred.T, self.x_centred)
         if np.isclose(np.linalg.det(S_w), 0) and type(self) == LDA:
             raise ZeroDivisionError('Low rank covariance matrix, please use LDA_SVD instead.')
         self.S_w_inv = np.linalg.inv(S_w)
-        #print(S_b / m, np.linalg.inv(np.linalg.inv(S_b)) / m)
-        #print(np.linalg.det(S_b))
-        #print(np.linalg.svd(S_b))
-        #print(np.dot(S_b, np.linalg.inv(S_b)))
 
     def predict(self, x):
         """predict
@@ -55,7 +52,6 @@ class LDA:
         for i in range(nc):
             x_shifted = x - self.mu[i]
             p[i, :] = - .5 * np.sum(np.dot(x_shifted, self.S_w_inv) * x_shifted, axis=1) + self.log_prob[i]
-        #print(p)
         return self.cls[np.argmax(p, axis=0)]
 
 class LDA_SVD(LDA):
@@ -67,7 +63,7 @@ class LDA_SVD(LDA):
         """train a model
         inputs:
             x: array[[float]], m x n
-            y: array[Eq a], m x 1
+            y: array[Eq a], m
         outputs:
         modifies:
             as in super.train
@@ -76,20 +72,11 @@ class LDA_SVD(LDA):
         """
         super().train(x, y)
         nc = len(self.cls)
-        #print("mu", self.mu)
-        #print("x", x[:10, :])
-        #print("x_centred:", self.x_centred[:10,:])
         m, n = x.shape
-        #std = np.std(self.x_centred, axis=0) #
-        #self.x_centred = self.x_centred / std #
         _, s, vt = np.linalg.svd(self.x_centred)
-        #print(s)
         vt = vt[np.logical_not(np.isclose(s, 0))]
         s = s[np.logical_not(np.isclose(s, 0))]
         self.trans = (vt.T / s).T
-        #self.trans = (vt.T / s).T / std #
-        #self.trans = 1 / s.reshape(-1, 1) * vt
-        #print("da:", self.trans)
         self.mu_trans = np.dot(self.mu, self.trans.T)
 
     def predict(self, x):
@@ -97,7 +84,7 @@ class LDA_SVD(LDA):
         inputs:
             x: array[[float]], m x n
         outputs:
-            y: array[Eq a], m x 1
+            y: array[Eq a], m
         """
         m, n = x.shape
         nc = len(self.cls)
@@ -116,10 +103,12 @@ class FDA(LDA_SVD):
         outputs:
         modifies:
             as in super.train
-            self.p: int
+            p: modified as a local var
+            self.xbar: array[float], n, mean of input x
             self.trans_proj: array[[float]], p x n, operator that first transforms data to standard normal,
                 then projects them to the principle component space
-            self.mu_trans_proj: array[[float]], p x n, the centroids in the principle component space
+            self.coef: array[[float]], nc x n, coefficient in the linear model
+            self.intercept: array[float], nc, intercept in the linear model
         """
         super().train(x, y)
         nc = len(self.cls)
@@ -129,36 +118,33 @@ class FDA(LDA_SVD):
         mu_trans = np.dot(self.mu, self.trans.T)
         self.xbar = np.mean(x, axis=0)
         xbar_trans = np.sum(mu_trans * np.exp(self.log_prob).reshape(-1, 1), axis=0)
-        M_trans = np.dot(self.mu[y], self.trans.T) #
-        tosvd = M_trans - xbar_trans #
-        #tosvd = mu_trans - xbar_trans
+        M_trans = np.dot(self.M, self.trans.T)
+        tosvd = M_trans - xbar_trans
         _, s, vt = np.linalg.svd(tosvd)
-        #vt = vt[:nc, :]
         vt = vt[np.logical_not(np.isclose(s, 0))]
         if p > len(vt):
             warnings.warn('Rank is lower than the number of components, use rank as number of components')
             p = len(vt)
         proj = vt[:p,:]
-        self.p = p
-        self.mu_trans_proj = np.dot(self.mu_trans, proj.T)
         self.trans_proj = np.dot(proj, self.trans)
-        #print("da", self.trans)
-        #print("da", proj)
-        #print("da", self.trans_proj)
+        self.coef = np.dot(self.mu, np.dot(self.trans_proj.T, self.trans_proj))
+        self.intercept = - .5 * np.sum(np.dot(self.mu, self.trans_proj.T) ** 2, axis=1) + self.log_prob
+        self.intercept.shape = -1, 1
 
     def predict(self, x):
         """predict
         inputs:
             x: array[[float]], m x n
         outputs:
-            y: array[Eq a], m x 1
+            y: array[Eq a], m
         """
-        m, n = x.shape
-        nc = len(self.cls)
-        diff = np.dot(x, self.trans_proj.T).reshape((m, 1, self.p)) - self.mu_trans_proj.reshape((1, nc, self.p))
-        return self.cls[np.argmax(- .5 * np.sum(diff * diff, axis=2) + self.log_prob.reshape((1, nc)), axis=1)]
+        return self.cls[np.argmax(np.dot(self.coef, x.T) + self.intercept, axis=0)]
 
     def transform_to_match_sk(self, x):
-        """transformation of x, to match the output of sklearn. currently not matching except when doing dimensionality reduction (p < nc - 1).
+        """transformation of x, to match the output of sklearn.
+        inputs:
+            x: array[[float]], m x n
+        outputs:
+            y: array[[float]], m x n
         """
         return np.dot(x - self.xbar, self.trans_proj.T)
