@@ -150,7 +150,7 @@ class FDA(LDA_SVD):
         return np.dot(x - self.xbar, self.trans_proj.T)
 
 class QDA:
-    def train(x, y):
+    def train(self, x, y):
         """train
         inputs:
             x: array[[float]], m x n
@@ -169,23 +169,32 @@ class QDA:
         self.B = np.zeros((nc, n))
         self.C = np.zeros(nc)
         for i, c in enumerate(self.cls):
-            mu = np.mean(x[y == c], axis=0)
-            x_centred = x[y == c] - mu
+            xc = x[y == c]
+            mu = np.mean(xc, axis=0)
+            #print(xc.shape)
+            mc = xc.shape[0]
+            if mc == 1:
+                raise ZeroDivisionError("Only one sample in class {}".format(c))
+            else:
+                x_centred = (xc - mu) / np.sqrt(mc - 1)
             _, s, vt = np.linalg.svd(x_centred)
             vt = vt[np.logical_not(np.isclose(s, 0))] #shape = r, n
             s = s[np.logical_not(np.isclose(s, 0))] #shape = r,
             trans = vt / s.reshape(-1, 1) #shape = r, n
-            self.A[i, :] = -.5 np.dot(trans.T, trans) #shape = n, n
-            self.B[i, :] = np.dot(mu, self.A[i, :]) #shape = n,
-            self.C[i] = -.5 * np.sum(self.B[i, :] * mu) + np.log(np.sum(y == c) / m)
+            self.A[i, :] = -.5 * np.dot(trans.T, trans) #shape = n, n
+            self.B[i, :] = -2 * np.dot(mu, self.A[i, :]) #shape = n,
+            self.C[i] = -.5 * np.sum(self.B[i, :] * mu) \
+                        - np.sum(np.log(s)) + np.log(mc / m)
 
-    def predict(x):
+    def predict(self, x):
         """predict
         inputs:
             x: array[[float]], m x n
         outputs:
             array[Eq], m: prediction label
         """
-        quad = np.sum(np.dot(x, self.A) * x, axis=2) #shape = nc, m
+        #print(x.shape, self.A.shape, np.dot(x, self.A).shape)
+        quad = np.sum(np.transpose(np.dot(x, self.A), (1, 0, 2)) * x, axis=2) #shape = nc, m
         lin = np.dot(self.B, x.T) #shape = nc, m
-        return self.cls[np.argmax(quad + lin + self.C.reshape(nc, 1), axis=0)]
+        #print(quad + lin + self.C.reshape(-1, 1))
+        return self.cls[np.argmax(quad + lin + self.C.reshape(-1, 1), axis=0)]
