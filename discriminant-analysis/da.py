@@ -148,3 +148,44 @@ class FDA(LDA_SVD):
             y: array[[float]], m x n
         """
         return np.dot(x - self.xbar, self.trans_proj.T)
+
+class QDA:
+    def train(x, y):
+        """train
+        inputs:
+            x: array[[float]], m x n
+            y: array[Eq], m
+        outputs:
+        modifies:
+            self.cls: array[Eq a], nc: classes
+            self.A: array[[[float]]], nc x n x n: quadratic term matrix
+            self.B: array[[float]], nc x n: linear term matrix
+            self.C: array[float], nc: constant term
+        """
+        self.cls = np.array(list(set(y)))
+        nc = len(self.cls)
+        m, n = x.shape
+        self.A = np.zeros((nc, n, n))
+        self.B = np.zeros((nc, n))
+        self.C = np.zeros(nc)
+        for i, c in enumerate(self.cls):
+            mu = np.mean(x[y == c], axis=0)
+            x_centred = x[y == c] - mu
+            _, s, vt = np.linalg.svd(x_centred)
+            vt = vt[np.logical_not(np.isclose(s, 0))] #shape = r, n
+            s = s[np.logical_not(np.isclose(s, 0))] #shape = r,
+            trans = vt / s.reshape(-1, 1) #shape = r, n
+            self.A[i, :] = -.5 np.dot(trans.T, trans) #shape = n, n
+            self.B[i, :] = np.dot(mu, self.A[i, :]) #shape = n,
+            self.C[i] = -.5 * np.sum(self.B[i, :] * mu) + np.log(np.sum(y == c) / m)
+
+    def predict(x):
+        """predict
+        inputs:
+            x: array[[float]], m x n
+        outputs:
+            array[Eq], m: prediction label
+        """
+        quad = np.sum(np.dot(x, self.A) * x, axis=2) #shape = nc, m
+        lin = np.dot(self.B, x.T) #shape = nc, m
+        return self.cls[np.argmax(quad + lin + self.C.reshape(nc, 1), axis=0)]
