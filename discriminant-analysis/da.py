@@ -171,15 +171,14 @@ class QDA:
         for i, c in enumerate(self.cls):
             xc = x[y == c]
             mu = np.mean(xc, axis=0)
-            #print(xc.shape)
             mc = xc.shape[0]
             if mc == 1:
                 raise ZeroDivisionError("Only one sample in class {}".format(c))
             else:
                 x_centred = (xc - mu) / np.sqrt(mc - 1)
             _, s, vt = np.linalg.svd(x_centred)
-            vt = vt[np.logical_not(np.isclose(s, 0))] #shape = r, n
-            s = s[np.logical_not(np.isclose(s, 0))] #shape = r,
+            if np.sum(np.isclose(s, 0)) > 0:
+                raise ZeroDivisionError("Singular covariance matrix in class {}".format(c))
             trans = vt / s.reshape(-1, 1) #shape = r, n
             self.A[i, :] = -.5 * np.dot(trans.T, trans) #shape = n, n
             self.B[i, :] = -2 * np.dot(mu, self.A[i, :]) #shape = n,
@@ -191,10 +190,15 @@ class QDA:
         inputs:
             x: array[[float]], m x n
         outputs:
-            array[Eq], m: prediction label
+            array[Eq], m: prediction labels
         """
-        #print(x.shape, self.A.shape, np.dot(x, self.A).shape)
         quad = np.sum(np.transpose(np.dot(x, self.A), (1, 0, 2)) * x, axis=2) #shape = nc, m
         lin = np.dot(self.B, x.T) #shape = nc, m
-        #print(quad + lin + self.C.reshape(-1, 1))
         return self.cls[np.argmax(quad + lin + self.C.reshape(-1, 1), axis=0)]
+
+    def decision_function_sk_debug(self, x):
+        """decision function for debugging purposes, the output should match that of sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis._decision_function
+        """
+        quad = np.sum(np.transpose(np.dot(x, self.A), (1, 0, 2)) * x, axis=2) #shape = nc, m
+        lin = np.dot(self.B, x.T) #shape = nc, m
+        return (quad + lin + self.C.reshape(-1, 1)).T

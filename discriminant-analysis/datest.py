@@ -165,19 +165,20 @@ class TestQDA(unittest.TestCase):
         x_new = np.array([[-0.8, -1]])
         self.assertAgainstSK(x, y, x_new)
 
-    def testLowRank(self):
+    def testOneSampleClass(self):
         # when m and n are close: mismatch covariances due to low rank (won't pass)
         np.random.seed(0)
         x = np.random.randn(6, 4)
         y = np.random.randint(0, 3, size=(6,))
         self.assertRaises(ZeroDivisionError, self.clf.train, x, y)
 
-    def testAgainstSkRandom(self):
-        #np.random.seed(6)
+    def testSingularCov(self):
+        np.random.seed(0)
         x = np.random.randn(6, 2)
         y = np.random.randint(0, 2, size=(6,))
-        x_new = np.random.randn(5, 2)
-        self.assertAgainstSK(x, y, x_new)
+        self.assertRaises(ZeroDivisionError, self.clf.train, x, y)
+
+    def testAgainstSkRandom(self):
         #np.random.seed(5)
         x = np.random.randn(100, 4)
         y = np.random.randint(0, 3, size=(100,))
